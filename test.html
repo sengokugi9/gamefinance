@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมการเงิน 1.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" as="style" onload="this.rel='stylesheet'">
+    <link rel="icon" type="image/png" href="/img/1.jpg">
+    <style>
+        .glassmorphism {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar {
+            transition: width 0.4s ease-in-out;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(31, 41, 55, 0.9);
+            color: #d1d5db;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 20;
+            border: 1px solid #34d399;
+        }
+        .notification {
+            padding: 8px 16px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            animation: slideIn 0.4s ease-in-out;
+            background: rgba(31, 41, 55, 0.9);
+            border: 1px solid #374151;
+        }
+        .notification-info { color: #d1d5db; }
+        .notification-success { background: rgba(52, 211, 153, 0.9); color: #111827; }
+        .notification-error { background: rgba(239, 68, 68, 0.9); color: #d1d5db; }
+        @keyframes slideIn {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .sidebar-btn, .action-btn {
+            transition: all 0.3s ease;
+        }
+        .sidebar-btn:hover, .sidebar-btn.active {
+            background-color: #34d399;
+            color: #111827;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .action-btn:hover {
+            background-color: #34d399;
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        .icon {
+            transition: transform 0.2s ease;
+        }
+        .icon:hover {
+            transform: scale(1.1);
+        }
+        @media (max-width: 640px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+    <script src="game.js" defer></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-blue-900 text-white font-sans min-h-screen flex">
+    <div id="loading-screen" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-400"></div>
+            <p class="mt-3 text-base font-medium text-gray-400">กำลังโหลด...</p>
+        </div>
+    </div>
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-16 sm:w-48 bg-gray-950 border-r border-gray-800 p-3 z-40">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="hidden sm:block text-xl font-bold text-[#34d399]">เกมการเงิน</h1>
+            <button id="sidebar-toggle" class="text-[#34d399] text-2xl sm:hidden">☰</button>
+        </div>
+        <nav class="space-y-2">
+            <button data-section="financial" class="sidebar-btn w-full flex items-center gap-2 bg-gray-900 text-gray-400 font-medium py-2 px-3 rounded-lg text-sm active">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="hidden sm:inline">การเงิน</span>
+            </button>
+            <button data-section="assets" class="sidebar-btn w-full flex items-center gap-2 bg-gray-900 text-gray-400 font-medium py-2 px-3 rounded-lg text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                <span class="hidden sm:inline">สินทรัพย์</span>
+            </button>
+            <button data-section="status" class="sidebar-btn w-full flex items-center gap-2 bg-gray-900 text-gray-400 font-medium py-2 px-3 rounded-lg text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2M9 19"></path></svg>
+                <span class="hidden sm:inline">สถานะ</span>
+            </button>
+            <button data-section="turn" class="sidebar-btn w-full flex items-center gap-2 bg-gray-900 text-gray-400 font-medium py-2 px-3 rounded-lg text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="hidden sm:inline">เทิร์น</span>
+            </button>
+            <button data-section="history" class="sidebar-btn w-full flex items-center gap-2 bg-gray-900 text-gray-400 font-medium py-2 px-3 rounded-lg text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                <span class="hidden sm:inline">ประวัติ</span>
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 sm:p-6 ml-16 sm:ml-48 max-w-3xl mx-auto">
+        <!-- Financial Status Section -->
+        <div id="financial-section" class="glassmorphism p-4 sm:p-5 fade-in mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold mb-3 text-blue-200 flex items-center gap-2">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                สถานะทางการเงิน
+            </h2>
+            <div class="space-y-2.5">
+                <p><span data-tooltip="เงินที่ถูกหักจากค่าใช้จ่ายรายเดือน ใช้สำหรับการใช้จ่ายหรือบริหารตามสมควร" class="text-gray-400 hover:text-[#34d399]">เงินสด</span>: <span id="cash" class="font-bold text-[#34d399]">0</span> บาท</p>
+                <div id="savings-container" class="hidden">
+                    <p><span data-tooltip="เงินที่ฝากในธนาคาร ได้รับดอกเบี้ย 2% ต่อเดือน" class="text-gray-400 hover:text-[#34d399]">เงินฝาก</span>: <span id="savings" class="font-bold text-[#34d399]">0</span> บาท</p>
+                </div>
+                <div id="insurance-container" class="hidden">
+                    <p><span data-tooltip="ค่าเบี้ยประกันสุขภาพต่อเดือน" class="text-gray-400 hover:text-[#34d399]">ค่าเบี้ยประกัน</span>: <span id="insurance-premium" class="font-bold text-[#ef4444]">0</span> บาท</p>
+                </div>
+                <p><span data-tooltip="เงินเดือนที่คุณได้รับทุกเดือน (4 เทิร์น)" class="text-gray-400 hover:text-[#34d399]">รายรับ</span>: <span id="income" class="font-bold text-[#34d399]">9000</span> บาท</p>
+                <p><span data-tooltip="ค่าใช้จ่ายประจำและค่าใช้จ่ายเพิ่มเติมอื่นๆต่อเดือน" class="text-gray-400 hover:text-[#34d399]">รายจ่าย</span>: <span id="expense" class="font-bold text-[#ef4444]">6500</span> บาท</p>
+                <p><span data-tooltip="ยอดคงเหลือจากเงินเดือน รายรับลบรายจ่ายคงที่ต่อเดือน" class="text-gray-400 hover:text-[#34d399]">ยอดคงเหลือ</span>: <span id="balance" class="font-bold text-[#34d399]">0</span> บาท</p>
+                <p id="debt-interest-container" class="hidden"><span data-tooltip="ดอกเบี้ย 5% จากหนี้ทั้งหมด จ่ายทุกเดือน" class="text-gray-400 hover:text-[#34d399]">ดอกเบี้ยหนี้</span>: <span id="debt-interest" class="font-bold text-[#ef4444]">0</span> บาท/เดือน</p>
+            </div>
+        </div>
+
+        <!-- Assets and Debts Section -->
+        <div id="assets-section" class="glassmorphism p-4 sm:p-5 fade-in hidden mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold mb-3 text-blue-200 flex items-center gap-2">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                สถานะสินทรัพย์และหนี้
+            </h2>
+            <div class="space-y-2.5">
+                <p><span data-tooltip="มูลค่าทรัพย์สิน สิ่งที่เอาเงินเข้ากระเป๋าตัวคุณ" class="text-gray-400 hover:text-[#34d399]">ทรัพย์สิน</span>: <span id="assets" class="font-bold text-[#34d399]">0</span> บาท</p>
+                <p><span data-tooltip="สิ่งที่ดึงเงินออกจากกระเป๋าของคุณ ดอกเบี้ย 5% ต่อเดือน" class="text-gray-400 hover:text-[#34d399]">หนี้สิน</span>: <span id="debt" class="font-bold text-[#ef4444]">0</span> บาท</p>
+            </div>
+        </div>
+
+        <!-- Status Section -->
+        <div id="status-section" class="glassmorphism p-4 sm:p-5 fade-in hidden mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold mb-3 text-blue-200 flex items-center gap-2">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2M9 19"></path></svg>
+                ค่าสถานะ
+            </h2>
+            <div class="space-y-3">
+                <div>
+                    <p><span data-tooltip="ความเหนื่อยสูงอาจเพิ่มความเครียดและลดประสิทธิภาพการทำงาน" class="text-gray-400 hover:text-[#34d399]">ความเหนื่อย</span></p>
+                    <div class="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+                        <div id="fatigue-bar" class="bg-[#ef4444] h-3 rounded-full progress-bar"></div>
+                    </div>
+                </div>
+                <div>
+                    <p><span data-tooltip="ความสุขสูงช่วยลดความเครียดและเพิ่มโอกาสได้รับโบนัส" class="text-gray-400 hover:text-[#34d399]">ความสุข</span></p>
+                    <div class="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+                        <div id="happiness-bar" class="bg-[#34d399] h-3 rounded-full progress-bar"></div>
+                    </div>
+                </div>
+                <div>
+                    <p><span data-tooltip="ความเครียดสูงอาจทำให้เกมจบก่อนกำหนด" class="text-gray-400 hover:text-[#34d399]">ความเครียด</span></p>
+                    <div class="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+                        <div id="stress-bar" class="bg-yellow-500 h-3 rounded-full progress-bar"></div>
+                    </div>
+                </div>
+                <div>
+                    <p><span data-tooltip="ความรู้สูงช่วยปลดล็อกโอกาส เช่น งานใหม่หรือเป้าหมาย" class="text-gray-400 hover:text-[#34d399]">ความรู้</span></p>
+                    <div class="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+                        <div id="knowledge-bar" class="bg-[#60a5fa] h-3 rounded-full progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Turn Info Section -->
+        <div id="turn-section" class="glassmorphism p-4 sm:p-5 fade-in hidden mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold mb-3 text-blue-200 flex items-center gap-2">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                ข้อมูลเทิร์น
+            </h2>
+            <div class="space-y-2.5">
+                <p>เทิร์น: <span id="turn" class="font-bold text-[#34d399]">1</span> เดือน: <span id="month" class="font-bold text-[#34d399]">1</span></p>
+                <p>เงินเดือนครั้งถัดไป: <span id="turns-until-salary" class="font-bold text-[#34d399]">4</span> เทิร์น</p>
+                <p>เป้าหมาย: <span id="goal" class="font-bold text-[#60a5fa]">ไม่มีเป้าหมายในขณะนี้</span></p>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history-section" class="glassmorphism p-4 sm:p-5 fade-in hidden mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold mb-3 text-blue-200 flex items-center gap-2">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                การกระทำ / เหตุการณ์
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-separate border-spacing-y-2">
+                    <thead>
+                        <tr class="bg-gray-700">
+                            <th class="px-3 py-2 text-gray-200 font-semibold rounded-l-lg text-sm">เทิร์น</th>
+                            <th class="px-3 py-2 text-gray-200 font-semibold text-sm">ประเภท</th>
+                            <th class="px-3 py-2 text-gray-200 font-semibold text-sm">รายละเอียด</th>
+                            <th class="px-3 py-2 text-gray-200 font-semibold rounded-r-lg text-sm">จำนวนเงิน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-log" class="text-gray-400 text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="fixed bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800 p-4 flex flex-wrap gap-2 justify-center z-40">
+            <button id="work-btn" class="action-btn bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                ทำงาน
+            </button>
+            <button id="rest-btn" class="action-btn bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                พักผ่อน
+            </button>
+            <button id="study-btn" class="action-btn bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                เรียนรู้
+            </button>
+            <button id="buy-btn" class="action-btn bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                ซื้อของ
+            </button>
+            <button id="finance-btn" class="action-btn bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                จัดการการเงิน
+            </button>
+            <button id="knowledge-btn" class="action-btn bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm hidden">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                คลังความรู้
+            </button>
+            <button id="next-turn-btn" class="action-btn bg-red-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <svg class="w-5 h-5 icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                จบเทิร์น
+            </button>
+        </div>
+    </main>
+
+    <script>
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            if (!container) return addHistory('error', 'ไม่พบ element ID "notification-container" ใน UI');
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type} rounded-lg`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Sidebar navigation and section switching
+        const sidebar = document.getElementById('sidebar');
+        const toggleButton = document.getElementById('sidebar-toggle');
+        document.querySelectorAll('.sidebar-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.glassmorphism').forEach(section => section.classList.add('hidden'));
+                button.classList.add('active');
+                const sectionId = button.getAttribute('data-section') + '-section';
+                document.getElementById(sectionId).classList.remove('hidden');
+                if (window.innerWidth < 640) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+
+        // Toggle sidebar on mobile
+        toggleButton.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Show financial section by default
+        document.getElementById('financial-section').classList.remove('hidden');
+        document.querySelector('[data-section="financial"]').classList.add('active');
+    </script>
+</body>
+</html>
